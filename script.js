@@ -1,5 +1,8 @@
-// 1. DATA SKENARIO (Database Ronde "Sakit")
-// 1. DATA SKENARIO (10 Ronde Full - Menantang)
+// =========================================
+// GAME PENJAGA GAMBUT - FULL SCRIPT V.FINAL
+// =========================================
+
+// 1. DATA SKENARIO (Database 10 Ronde)
 const dbRonde = [
   {
     ronde: 1,
@@ -30,7 +33,7 @@ const dbRonde = [
   },
   {
     ronde: 4,
-    text: "Kabut asap tebal menyelimuti desa (ISPA). Anak-anak mulai jatuh sakit.",
+    text: "Kabut asap tebal menyelimuti desa. Anak-anak mulai jatuh sakit.",
     cards: [
       { title: "Bangun Klinik Darurat", desc: "Selamatkan warga. (❤️+5, 💲-4)", eff: {e:0, s:5, m:-4} },
       { title: "Bagikan Masker Gratis", desc: "Solusi murah sementara. (❤️+2, 💲-1)", eff: {e:0, s:2, m:-1} },
@@ -39,7 +42,7 @@ const dbRonde = [
   },
   {
     ronde: 5,
-    text: "LSM Internasional menawarkan program 'Carbon Credit' (Jual Oksigen), tapi melarang aktivitas pertanian.",
+    text: "Lembaga Swadaya Masyarakat (LSM) Internasional menawarkan program 'Carbon Credit' (Jual Oksigen), tapi melarang aktivitas pertanian.",
     cards: [
       { title: "Terima Kontrak Penuh", desc: "Uang masuk, petani marah. (🌳+5, ❤️-5, 💲+3)", eff: {e:5, s:-5, m:3} },
       { title: "Tolak Tawaran LSM", desc: "Bebaskan petani. (🌳-2, ❤️+4, 💲-1)", eff: {e:-2, s:4, m:-1} },
@@ -88,12 +91,12 @@ const dbRonde = [
     cards: [
       { title: "Prioritas Lingkungan", desc: "Restorasi total. (🌳+6, ❤️-2, 💲-3)", eff: {e:6, s:-2, m:-3} },
       { title: "Prioritas Kesejahteraan", desc: "Bagi-bagi modal. (🌳-2, ❤️+6, 💲-3)", eff: {e:-2, s:6, m:-3} },
-      { title: "Kejar Pertumbuhan Ekon", desc: "Genjot produksi. (🌳-4, ❤️-2, 💲+6)", eff: {e:-4, s:-2, m:6} }
+      { title: "Kejar Pertumbuhan Ekon", desc: "Naikkan produksi. (🌳-4, ❤️-2, 💲+6)", eff: {e:-4, s:-2, m:6} }
     ]
   }
 ];
 
-// 2. STATE & ELEMENTS
+// 2. STATE & ELEMENTS (Inisialisasi Variabel & Pengambilan Elemen HTML)
 let state = { eco: 10, soc: 10, money: 10, round: 0, selected: null, bgmPlayed: false };
 
 const pages = {
@@ -103,6 +106,7 @@ const pages = {
 };
 
 const ui = {
+  // Indikator Skor & Teks
   eco: document.getElementById('val-eko'),
   soc: document.getElementById('val-sos'),
   money: document.getElementById('val-ekn'),
@@ -110,12 +114,12 @@ const ui = {
   text: document.getElementById('text-masalah'),
   cards: document.getElementById('card-container'),
   
-  // Overlays
-  ovEko: document.querySelector('.overlay-eko'),
-  ovSos: document.querySelector('.overlay-sos'),
-  ovEkn: document.querySelector('.overlay-ekn'),
+  // Grup Overlay Visual (Mengambil banyak gambar sekaligus dengan querySelectorAll)
+  groupEco: document.querySelectorAll('.ov-eco'),
+  groupSos: document.querySelectorAll('.ov-sos'),
+  groupEkn: document.querySelectorAll('.ov-ekn'),
 
-  // Result
+  // Elemen Halaman Hasil
   resTitle: document.getElementById('res-title'),
   resDesc: document.getElementById('res-desc'),
   resIcon: document.getElementById('res-icon'),
@@ -124,68 +128,79 @@ const ui = {
   endEkn: document.getElementById('end-ekn')
 };
 
+// Ambil elemen audio BGM (Pastikan tag <audio id="bgm"> ada di HTML)
 const bgm = document.getElementById('bgm');
 
-// 3. NAVIGATION FUNCTIONS
+// 3. FUNGSI NAVIGASI (Pindah Halaman & Tombol)
 function switchPage(pageName) {
-  // Sembunyikan semua
+  // Sembunyikan semua halaman dulu
   Object.values(pages).forEach(p => p.classList.add('hidden'));
-  // Munculkan yang diminta
+  // Munculkan halaman yang diminta
   pages[pageName].classList.remove('hidden');
 }
 
-// Tombol Mulai
+// Event Listener Tombol Mulai
 document.getElementById('btn-start').addEventListener('click', () => {
-  // Mulai Musik (Safe play)
+  // Coba putar musik jika belum diputar
   if (!state.bgmPlayed && bgm) {
     bgm.volume = 0.3;
-    bgm.play().catch(e => console.log("BGM error:", e));
+    try {
+        bgm.play().catch(e => console.log("Info: Autoplay BGM dicegah browser (normal).", e));
+    } catch (err) {
+        console.log("Error BGM:", err);
+    }
     state.bgmPlayed = true;
   }
   startGame();
 });
 
-// Tombol Restart
+// Event Listener Tombol Restart
 document.getElementById('btn-restart').addEventListener('click', () => {
   startGame();
 });
 
-// 4. GAME LOGIC
+// 4. LOGIKA GAME UTAMA
 function startGame() {
+  // Reset status game ke awal
   state.eco = 10; state.soc = 10; state.money = 10; state.round = 0; state.selected = null;
-  updateUI();
-  renderRound();
-  switchPage('game');
+  updateUI(); // Update tampilan ke skor awal (10)
+  renderRound(); // Siapkan ronde 1
+  switchPage('game'); // Pindah ke layar game
 }
 
+// Fungsi untuk menampilkan kartu dan teks ronde saat ini
 function renderRound() {
   const currentData = dbRonde[state.round];
   
-  // Cek jika game tamat (jika data ronde habis)
+  // Cek apakah ronde sudah habis (Game Selesai)
   if (!currentData) {
     finishGame();
     return;
   }
 
-  // Reset Pilihan
+  // Reset pilihan kartu
   state.selected = null;
-
-  // Render Teks
+  
+  // Update teks ronde dan masalah
   ui.round.innerText = `RONDE ${currentData.ronde} / ${dbRonde.length}`;
   ui.text.innerText = currentData.text;
 
-  // Render Kartu
+  // Kosongkan kontainer kartu sebelum diisi yang baru
   ui.cards.innerHTML = '';
+  
+  // Buat elemen kartu pilihan secara dinamis
   currentData.cards.forEach((card, index) => {
     const btn = document.createElement('div');
     btn.className = 'card';
     btn.innerHTML = `<h4>${card.title}</h4><p>${card.desc}</p>`;
     
+    // Event saat kartu diklik
     btn.addEventListener('click', () => {
-      // Hapus kelas selected dari semua
+      // Hapus highlight dari kartu lain
       document.querySelectorAll('.card').forEach(c => c.classList.remove('selected'));
-      // Tambah ke yang diklik
+      // Tambah highlight ke kartu yang diklik
       btn.classList.add('selected');
+      // Simpan indeks kartu yang dipilih
       state.selected = index;
     });
     
@@ -193,85 +208,115 @@ function renderRound() {
   });
 }
 
+// Fungsi yang dipanggil saat tombol "KONFIRMASI PILIHAN" diklik
 function selesaiRonde() {
+  // Cek apakah pemain sudah memilih kartu
   if (state.selected === null) {
     alert("Pilih dulu satu kartu!");
     return;
   }
 
-  // Terapkan Efek
+  // Ambil efek dari kartu yang dipilih
   const effects = dbRonde[state.round].cards[state.selected].eff;
+  // Terapkan efek ke skor
   applyEffect('eco', effects.e || 0);
   applyEffect('soc', effects.s || 0);
   applyEffect('money', effects.m || 0);
 
-  // Lanjut Ronde
+  // Lanjut ke ronde berikutnya
   state.round++;
   renderRound();
 }
 
+// Fungsi untuk menghitung perubahan skor
 function applyEffect(type, val) {
   state[type] += val;
-  // Batasi 0 - 10 (Opsional, bisa dilepas kalau mau tanpa batas)
-  if(state[type] > 15) state[type] = 15; 
+  
+  // === ATURAN BATAS SKOR (UPDATED) ===
+  // Batas Maksimal: 10 (Tidak bisa lebih)
+  if(state[type] > 10) state[type] = 10; 
+  // Batas Minimal: 0 (Tidak bisa kurang)
   if(state[type] < 0) state[type] = 0;
+  // ===================================
+  
+  // Update tampilan setelah skor berubah
   updateUI();
 }
 
+// Fungsi untuk memperbarui semua elemen tampilan (skor & visual)
 function updateUI() {
+  // Update angka skor
   ui.eco.innerText = state.eco;
   ui.soc.innerText = state.soc;
   ui.money.innerText = state.money;
 
-  // Update Overlay Opacity (Makin rendah nilai, makin terlihat overlay bahaya)
-  // Logic: 10 (Aman) -> Opacity 0.1 ... 0 (Bahaya) -> Opacity 1.0
-  setOverlay(ui.ovEko, state.eco);
-  setOverlay(ui.ovSos, state.soc);
-  setOverlay(ui.ovEkn, state.money);
+  // Update visual overlay menggunakan logika level baru
+  updateOverlayState(ui.groupEco, state.eco);
+  updateOverlayState(ui.groupSos, state.soc);
+  updateOverlayState(ui.groupEkn, state.money);
 }
 
-function setOverlay(element, value) {
-  let op = 0; // Variabel untuk menyimpan nilai Opacity (0.0 s/d 1.0)
+// Fungsi Logika Visual Overlay (Sistem 4 Level Gambar)
+function updateOverlayState(imageGroup, score) {
+  let targetLevel = 0; // 0 artinya aman (tidak ada overlay yang muncul)
 
-  // LOGIKA PENGATURANNYA DI SINI:
-  
-  if (value >= 8) {
-    op = 0.1; // KONDISI AMAN (Skor 8-10): Hampir tidak terlihat (10%)
-  } 
-  else if (value >= 5) {
-    op = 0.4; // KONDISI WASPADA (Skor 5-7): Mulai terlihat samar (40%)
-  } 
-  else if (value >= 3) {
-    op = 0.7; // KONDISI BAHAYA (Skor 3-4): Terlihat jelas (70%)
-  } 
-  else {
-    op = 1.0; // KONDISI KRITIS (Skor 0-2): Gambar muncul penuh (100%)
+  // Tentukan level gambar mana yang harus muncul berdasarkan skor
+  if (score <= 2) {
+    targetLevel = 1; // Level 1: Kritis (Skor 0-2)
+  } else if (score <= 4) {
+    targetLevel = 2; // Level 2: Bahaya (Skor 3-4)
+  } else if (score <= 7) {
+    targetLevel = 3; // Level 3: Waspada (Skor 5-7)
+  } else {
+    targetLevel = 4; // Level 4: Aman/Ringan (Skor 8-10)
   }
 
-  // Terapkan perubahan ke elemen HTML
-  element.style.opacity = op; 
+  // Loop semua gambar di grup, nyalakan yang sesuai level, matikan sisanya
+  imageGroup.forEach(img => {
+    // Cek apakah gambar ini punya class level yang ditargetkan
+    if (targetLevel > 0 && img.classList.contains(`lvl-${targetLevel}`)) {
+      img.style.opacity = 1; // Munculkan
+    } else {
+      img.style.opacity = 0; // Sembunyikan
+    }
+  });
 }
 
-// 5. HASIL AKHIR
+
+// 5. FUNGSI HASIL AKHIR (UPDATED: Logika Gagal Jika Ada Nilai < 5)
 function finishGame() {
   switchPage('result');
   
+  // Tampilkan skor akhir di layar hasil
   ui.endEko.innerText = state.eco;
   ui.endSos.innerText = state.soc;
   ui.endEkn.innerText = state.money;
 
-  const total = state.eco + state.soc + state.money;
-  const isAlive = state.eco > 0 && state.soc > 0 && state.money > 0;
+  // === ATURAN MENANG/KALAH BARU ===
+  // Cek apakah ada SATU SAJA indikator yang nilainya di bawah 5
+  const isFailed = state.eco < 5 || state.soc < 5 || state.money < 5;
 
-  if (total >= 18 && isAlive) {
-    pages.result.className = "screen win-theme"; // Hijau
-    ui.resTitle.innerText = "SUKSES BESAR! 🏆";
-    ui.resIcon.innerText = "🌿";
-    ui.resDesc.innerText = "Kamu berhasil menyeimbangkan alam dan kebutuhan warga.";
-  } else {
-    pages.result.className = "screen lose-theme"; // Merah
+  if (isFailed) {
+    // === KONDISI KALAH (BAD ENDING) ===
+    pages.result.className = "screen lose-theme";
     ui.resTitle.innerText = "MISI GAGAL ⚠️";
     ui.resIcon.innerText = "🔥";
-    ui.resDesc.innerText = "Salah satu sektor hancur atau keseimbangan tidak tercapai.";
+    
+    // Beri pesan spesifik kenapa gagal
+    if (state.eco < 5) {
+        ui.resDesc.innerText = "Kerusakan lingkungan terlalu parah. Alam tidak bisa pulih.";
+    } else if (state.soc < 5) {
+        ui.resDesc.innerText = "Konflik sosial meledak. Desa menjadi tidak aman.";
+    } else {
+        ui.resDesc.innerText = "Desa bangkrut. Ekonomi runtuh total.";
+    }
+
+  } else {
+    // === KONDISI MENANG (GOOD ENDING) ===
+    // Hanya jika semua indikator bernilai 5 atau lebih
+    pages.result.className = "screen win-theme";
+    ui.resTitle.innerText = "SUKSES BESAR! 🏆";
+    ui.resIcon.innerText = "🌿";
+    ui.resDesc.innerText = "Luar biasa! Kamu berhasil menjaga keseimbangan desa dan alam dengan sangat baik. Semua sektor aman.";
   }
 }

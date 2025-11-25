@@ -3,20 +3,25 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Penjaga Gambut</title>
+  <title>Mandala Gambut</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
+  <audio id="bgm" loop>
+    <source src="" type="audio/mpeg">
+  </audio>
+
   <div id="page-home" class="screen">
     <div class="content-box">
-      <h1>PENJAGA<br>GAMBUT</h1>
-      <p class="subtitle">Sebuah Game Dilema Lingkungan</p>
+      <img src="image/judul.png" alt="Logo Penjaga Gambut" class="game-logo">
+      <p class="subtitle">Sebuah Game Tentang Dilema Lingkungan</p>
       
       <div class="tutorial">
         <p>🔥 <strong>Misi Kamu:</strong></p>
-        <p>Pimpin desa selama <strong>10 Ronde</strong>. Seimbangkan Ekologi, Sosial, dan Ekonomi.</p>
+        <p>Pimpin desa selama <strong>10 Ronde</strong>. Seimbangkan Ekologi (🌳), Sosial (❤️), dan Ekonomi (💲).</p>
+        <p>Dan jangan sampai skor kamu dibawah <strong>5</strong></p>
       </div>
 
       <button id="btn-start" class="btn-large">MULAI PETUALANGAN</button>
@@ -45,9 +50,21 @@
 
       <div class="visual-area">
         <img src="image/background.png" class="base-img">
-        <img src="image/overlay_ekologi.png" class="overlay overlay-eko">
-        <img src="image/overlay_sosial.png" class="overlay overlay-sos">
-        <img src="image/overlay_ekonomi.png" class="overlay overlay-ekn">
+
+        <img src="image/eko-level-1.png" class="overlay ov-eco lvl-1">
+        <img src="image/eko-level-2.png" class="overlay ov-eco lvl-2">
+        <img src="image/eko-level-3.png" class="overlay ov-eco lvl-3">
+        <img src="image/eko-level-4.png" class="overlay ov-eco lvl-4">
+
+        <img src="image/sos-level-1.png" class="overlay ov-sos lvl-1">
+        <img src="image/sos-level-2.png" class="overlay ov-sos lvl-2">
+        <img src="image/sos-level-3.png" class="overlay ov-sos lvl-3">
+        <img src="image/sos-level-4.png" class="overlay ov-sos lvl-4">
+
+        <img src="image/ekn-level-1.png" class="overlay ov-ekn lvl-1">
+        <img src="image/ekn-level-2.png" class="overlay ov-ekn lvl-2">
+        <img src="image/ekn-level-3.png" class="overlay ov-ekn lvl-3">
+        <img src="image/ekn-level-4.png" class="overlay ov-ekn lvl-4">
       </div>
       
     </div>
@@ -68,10 +85,6 @@
       <button id="btn-restart" class="btn-large">MAIN LAGI</button>
     </div>
   </div>
-
-  <audio id="bgm" loop>
-    <source src="suara/bgm-tenang.mp3" type="audio/mpeg">
-  </audio>
 
   <script src="script.js"></script>
 </body>
